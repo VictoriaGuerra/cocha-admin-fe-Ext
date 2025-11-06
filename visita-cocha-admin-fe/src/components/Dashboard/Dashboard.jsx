@@ -5,6 +5,8 @@ import UserTable from './UserTable';
 import ModuleTable from './ModuleTable';
 import { NavLink } from 'react-router-dom';
 import * as mockApi from '../../api/mockApi';
+import { localStoreApi } from '../../api/localStoreApi';
+import { stats as mockStats } from '../../data/statsData';
 import StatsCard from './StatsCard';
 import StatsChart from './StatsChart';
 import '../../styles/dashboard.css';
@@ -48,23 +50,31 @@ export default function Dashboard() {
     return ()=> mounted = false
   },[])
 
-  // load counts for stats
+  // load counts for stats and poll periodically (simulate realtime)
   useEffect(()=>{
     let mounted = true
     const loadCounts = async ()=>{
       try{
         const users = await mockApi.getUsers()
         const mods = await mockApi.getModules()
+
+        // count items across a few modules using localStoreApi
+        const attractionItems = (await localStoreApi.getAll('attractions')) || []
+        const restaurantItems = (await localStoreApi.getAll('restaurants')) || []
+        const eventsItems = (await localStoreApi.getAll('events')) || []
+
         if (!mounted) return
         setStatsSummary([
           { title: 'Usuarios', value: users.length },
           { title: 'Módulos', value: mods.length },
-          { title: 'Eventos', value: 5 },
+          { title: 'Eventos', value: eventsItems.length },
         ])
       }catch(e){ console.error(e) }
     }
+
     loadCounts()
-    return ()=> mounted = false
+    const id = setInterval(loadCounts, 10000) // refresh every 10s
+    return ()=>{ mounted = false; clearInterval(id) }
   },[])
 
   return (
