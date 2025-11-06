@@ -26,6 +26,6 @@
     "@vitejs/plugin-react": "^3.1.0"
   },
   "overrides": {
-    "vite": "npm:rolldown-vite@7.1.14"
+   
   }
 }
