@@ -1,3 +1,4 @@
+// src/pages/Dashboard.jsx
 import React, { useContext } from 'react'
 import { AuthContext } from '../auth/AuthContext'
 

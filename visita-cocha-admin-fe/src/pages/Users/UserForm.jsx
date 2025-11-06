@@ -1,66 +1,62 @@
+// src/pages/Users/UserForm.jsx
 import React, { useState } from 'react'
 import * as mockApi from '../../api/mockApi'
-
+import { roles as ROLE_CONST } from '../../auth/roles'
 
 export default function UserForm({ editing, onClose }){
-const [email, setEmail] = useState(editing?.email || '')
-const [name, setName] = useState(editing?.name || '')
-const [roles, setRoles] = useState(editing?.roles || ['Mantenedor'])
-const [error, setError] = useState(null)
-const [saving, setSaving] = useState(false)
+	const [email, setEmail] = useState(editing?.email || '')
+	const [name, setName] = useState(editing?.name || '')
+	const [roles, setRoles] = useState(editing?.roles || ['Mantenedor'])
+	const [error, setError] = useState(null)
+	const [saving, setSaving] = useState(false)
 
+	const toggleRole = (r) => setRoles(prev => prev.includes(r) ? prev.filter(x=>x!==r) : [...prev, r])
 
-const toggleRole = (r) => setRoles(prev => prev.includes(r) ? prev.filter(x=>x!==r) : [...prev, r])
+	const handleSubmit = async (e)=>{
+		e.preventDefault(); setError(null); setSaving(true)
+		try{
+			if (editing) {
+				await mockApi.updateUser(editing.id, { name, roles })
+			} else {
+				await mockApi.createUser({ email, name, roles })
+			}
+			onClose()
+		}catch(err){ setError(err.message || 'Error'); }
+		setSaving(false)
+	}
 
+	return (
+		<div className="vc-modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 80 }}>
+			<div className="form-card" style={{ width: '100%', maxWidth: 680 }}>
+				<h4 style={{ marginBottom: 12, fontSize: 18 }}>{editing ? 'Editar' : 'Crear'} usuario</h4>
+				<form onSubmit={handleSubmit}>
+					{!editing && (
+						<>
+							<label style={{ display: 'block', marginBottom: 6 }}>Correo</label>
+							<input className="input" value={email} onChange={(e)=>setEmail(e.target.value)} type="email" required />
+						</>
+					)}
 
-const handleSubmit = async (e)=>{
-e.preventDefault(); setError(null); setSaving(true)
-try{
-if (editing) {
-await mockApi.updateUser(editing.id, { name, roles })
-} else {
-await mockApi.createUser({ email, name, roles })
-}
-onClose()
-}catch(err){ setError(err.message || 'Error'); }
-setSaving(false)
-}
+					<label style={{ display: 'block', marginTop: 12, marginBottom: 6 }}>Nombre</label>
+					<input className="input" value={name} onChange={(e)=>setName(e.target.value)} required />
 
+					<label style={{ display: 'block', marginTop: 12, marginBottom: 6 }}>Roles</label>
+					<div style={{ marginBottom: 12 }}>
+						{(ROLE_CONST ? Object.values(ROLE_CONST) : ['Admin','Mantenedor','SuperAdmin']).map(r => (
+							<label key={r} style={{ marginRight: 12 }}>
+								<input checked={roles.includes(r)} onChange={()=>toggleRole(r)} type="checkbox" /> <span style={{ marginLeft: 6 }}>{r}</span>
+							</label>
+						))}
+					</div>
 
-return (
-<div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-<div className="bg-white p-6 rounded shadow w-full max-w-lg">
-<h4 className="text-lg font-semibold mb-4">{editing ? 'Editar' : 'Crear'} usuario</h4>
-<form onSubmit={handleSubmit}>
-{!editing && (
-<>
-<label className="block mb-1">Correo</label>
-<input className="w-full mb-3 p-2 border rounded" value={email} onChange={(e)=>setEmail(e.target.value)} type="email" required />
-</>
-)}
+					{error && <div style={{ color: '#dc2626', marginBottom: 8 }}>{error}</div>}
 
-
-<label className="block mb-1">Nombre</label>
-<input className="w-full mb-3 p-2 border rounded" value={name} onChange={(e)=>setName(e.target.value)} required />
-
-
-<label className="block mb-1">Roles</label>
-<div className="mb-3">
-{['Admin','Mantenedor','SuperAdmin'].map(r => (
-<label key={r} className="mr-3"><input checked={roles.includes(r)} onChange={()=>toggleRole(r)} type="checkbox" /> {r}</label>
-))}
-</div>
-
-
-{error && <div className="text-red-600 mb-2">{error}</div>}
-
-
-<div className="flex justify-end">
-<button type="button" onClick={onClose} className="mr-2 px-3 py-1 border rounded">Cancelar</button>
-<button type="submit" disabled={saving} className="px-3 py-1 bg-sky-600 text-white rounded">{saving ? 'Guardando...' : 'Guardar'}</button>
-</div>
-</form>
-</div>
-</div>
-)
+					<div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+						<button type="button" onClick={onClose} className="btn">Cancelar</button>
+						<button type="submit" disabled={saving} className="btn btn-primary">{saving ? 'Guardando...' : 'Guardar'}</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	)
 }

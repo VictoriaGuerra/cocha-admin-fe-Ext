@@ -9,6 +9,14 @@ const defaultUsers = [
 { id: 'u-1', email: 'super@visita.cocha', name: 'Super Admin', roles: ['SuperAdmin'], password: 'admin123' }
 ]
 
+const MODULES_KEY = 'vc_modules_v1'
+
+const defaultModules = [
+	{ id: 'm-1', name: 'Atractivos Turísticos', status: 'Activo' },
+	{ id: 'm-2', name: 'Restaurantes', status: 'Activo' },
+	{ id: 'm-3', name: 'Hoteles', status: 'Activo' },
+]
+
 
 function read() {
 const raw = localStorage.getItem(STORAGE_KEY)
@@ -22,6 +30,19 @@ return JSON.parse(raw)
 
 function write(users) {
 localStorage.setItem(STORAGE_KEY, JSON.stringify(users))
+}
+
+function readModules(){
+	const raw = localStorage.getItem(MODULES_KEY)
+	if (!raw){
+		localStorage.setItem(MODULES_KEY, JSON.stringify(defaultModules))
+		return defaultModules.slice()
+	}
+	return JSON.parse(raw)
+}
+
+function writeModules(mods){
+	localStorage.setItem(MODULES_KEY, JSON.stringify(mods))
 }
 
 
@@ -73,10 +94,51 @@ write(users)
 return { ok: true }
 }
 
+// Modules CRUD (localStorage)
+export const getModules = async () => {
+	const mods = readModules()
+	return mods.slice()
+}
+
+export const createModule = async ({ name, status = 'Activo' }) => {
+	const mods = readModules()
+	if (mods.find(m => m.name === name)) throw { message: 'Módulo ya existe' }
+	const newMod = { id: `m-${Date.now()}`, name, status, allowedRoles: ['Admin','Mantenedor'] }
+	mods.push(newMod)
+	writeModules(mods)
+	// notify admin (simulado)
+	try{ simulateSendEmail('super@visita.cocha', `Nuevo módulo creado: ${name}`) }catch(e){/* ignore */}
+	return newMod
+}
+
+export const updateModule = async (id, patch) => {
+	const mods = readModules()
+	const idx = mods.findIndex(m => m.id === id)
+	if (idx === -1) throw { message: 'Módulo no encontrado' }
+	mods[idx] = { ...mods[idx], ...patch }
+	writeModules(mods)
+	return mods[idx]
+}
+
+export const deleteModule = async (id) => {
+	let mods = readModules()
+	mods = mods.filter(m => m.id !== id)
+	writeModules(mods)
+	return { ok: true }
+}
+
+
+
+
+// helper to persist simulated emails
+function saveSimulatedEmail(to, body){
+	const key = 'vc_sent_emails'
+	const out = JSON.parse(localStorage.getItem(key) || '[]')
+	out.push({ id: `e-${Date.now()}`, to, body, date: new Date().toISOString() })
+	localStorage.setItem(key, JSON.stringify(out))
+}
 
 function simulateSendEmail(to, body) {
-// aquí simulamos: mostramos en consola y alerta — en producción, backend hace esto
-console.info('Simulated email to', to, '', body)
-// guardamos en localStorage para que el frontend pueda mostrar un registro (opcional)
-const out = JSON.parse(localStorage.getItem('vc_sent_emails') || '[]')
+	console.info('Simulated email to', to, '', body)
+	saveSimulatedEmail(to, body)
 }
