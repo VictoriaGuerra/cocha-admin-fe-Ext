@@ -1,39 +1,46 @@
-// src/App.jsx
-import React, { useContext } from 'react';
-import { AuthContext } from './auth/AuthContext';
-import Login from './components/Login';
+﻿import React, { useContext } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, AuthContext } from './auth/AuthContext';
+import Layout from './components/Layout/Layout';
+import Login from './components/Login';
 import Dashboard from './components/Dashboard/Dashboard';
 import UsersList from './pages/Users/UsersList';
 import ModulesList from './pages/Modules/ModulesList';
-import ModulePage from './pages/Modules/ModulePage';
 import ConfigPage from './pages/Config/ConfigPage';
-import Sidebar from './components/Layout/Sidebar';
 import ModuleGenericList from './pages/Modules/ModuleGenericList';
-import ModuleGenericForm from './pages/Modules/ModuleGenericForm';
+import ModuleForm from './components/Modules/ModuleForm';
 
-export default function App() {
+const AuthenticatedContent = () => {
   const { user } = useContext(AuthContext);
 
-  if (!user) return <Login />;
+  if (!user) {
+    return <Login />;
+  }
 
   return (
+    <Layout>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/users" element={<UsersList />} />
+        <Route path="/modules" element={<ModulesList />} />
+        <Route path="/modules/configuracion" element={<ConfigPage />} />
+        <Route path="/modules/:moduleType" element={<ModuleGenericList />} />
+        <Route path="/modules/:moduleType/new" element={<ModuleForm />} />
+        <Route path="/modules/:moduleType/:id/edit" element={<ModuleForm />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Layout>
+  );
+};
+
+const App = () => {
+  return (
     <BrowserRouter>
-      <div className="dashboard-layout">
-        <Sidebar />
-        <div className="main-content">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/users" element={<UsersList />} />
-            <Route path="/modules" element={<ModulesList />} />
-            <Route path="/modules/configuracion" element={<ConfigPage />} />
-            <Route path="/modules/:moduleId" element={<ModuleGenericList />} />
-            <Route path="/modules/:moduleId/new" element={<ModuleGenericForm />} />
-            <Route path="/modules/:moduleId/:id" element={<ModuleGenericForm />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </div>
-      </div>
+      <AuthProvider>
+        <AuthenticatedContent />
+      </AuthProvider>
     </BrowserRouter>
   );
-}
+};
+
+export default App;

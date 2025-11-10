@@ -1,47 +1,106 @@
 import React, { useContext } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { AuthContext } from '../../auth/AuthContext';
-import '../../styles/common.css';
-import '../../styles/dashboard.css';
+import './Sidebar.css';
+import logo from '../../assets/images/logo.png';
 
-export default function Sidebar(){
+const Sidebar = () => {
   const { user, logout } = useContext(AuthContext);
-  const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  }
+  const menuItems = [
+    {
+      title: 'Dashboard',
+      path: '/',
+      icon: 'fa-chart-pie',
+    },
+    {
+      title: 'Módulos',
+      path: '/modules',
+      icon: 'fa-cubes',
+    },
+    {
+      title: 'Atractivos Turísticos',
+      path: '/modules/attractions',
+      icon: 'fa-mountain',
+    },
+    {
+      title: 'Restaurantes',
+      path: '/modules/restaurants',
+      icon: 'fa-utensils',
+    },
+    {
+      title: 'Eventos',
+      path: '/modules/events',
+      icon: 'fa-calendar-alt',
+    },
+    {
+      title: 'Hoteles',
+      path: '/modules/hotels',
+      icon: 'fa-hotel',
+    },
+    {
+      title: 'Categorías',
+      path: '/modules/categories',
+      icon: 'fa-tags',
+    },
+    {
+      title: 'Anuncios',
+      path: '/modules/announcements',
+      icon: 'fa-bullhorn',
+    },
+    {
+      title: 'Puntos',
+      path: '/modules/points',
+      icon: 'fa-map-marker-alt',
+    },
+    {
+      title: 'Usuarios',
+      path: '/users',
+      icon: 'fa-users',
+      adminOnly: true,
+    },
+    {
+      title: 'Configuración',
+      path: '/settings',
+      icon: 'fa-cog',
+    },
+  ];
 
   return (
-    <aside className="sidebar-container">
-      <div className="sidebar-top" style={{padding:20}}>
-        <div className="logo" style={{display:'flex',alignItems:'center',gap:12}}>
-          <img src="/logo192.png" alt="logo" style={{width:56}} />
-          <div>
-            <div style={{fontWeight:700,color:'#333'}}>Visita Cocha</div>
-            <div style={{fontSize:12,color:'#777'}}>{user?.name || user?.email}</div>
-          </div>
-        </div>
+    <aside className="sidebar">
+      <div className="sidebar-header">
+        <img 
+          src={logo}
+          alt="Visita Cocha"
+          className="sidebar-logo"
+        />
       </div>
 
-      <nav className="nav-list" style={{padding:'0 12px 12px 12px'}}>
-        <NavLink to="/" className={({isActive})=> isActive? 'nav-item active':'nav-item'}> <i className="fas fa-tachometer-alt"></i> <span>Dashboard</span></NavLink>
-        <NavLink to="/modules" className={({isActive})=> isActive? 'nav-item active':'nav-item'}> <i className="fas fa-th-large"></i> <span>Módulos</span></NavLink>
-        <NavLink to="/modules/attractions" className={({isActive})=> isActive? 'nav-item active':'nav-item'}> <i className="fas fa-landmark"></i> <span>Atractivos</span></NavLink>
-        <NavLink to="/modules/restaurants" className={({isActive})=> isActive? 'nav-item active':'nav-item'}> <i className="fas fa-utensils"></i> <span>Restaurantes</span></NavLink>
-        <NavLink to="/modules/events" className={({isActive})=> isActive? 'nav-item active':'nav-item'}> <i className="fas fa-calendar-alt"></i> <span>Eventos</span></NavLink>
-        <NavLink to="/modules/hotels" className={({isActive})=> isActive? 'nav-item active':'nav-item'}> <i className="fas fa-hotel"></i> <span>Hoteles</span></NavLink>
-        <NavLink to="/modules/categories" className={({isActive})=> isActive? 'nav-item active':'nav-item'}> <i className="fas fa-tags"></i> <span>Categorías</span></NavLink>
-        <NavLink to="/modules/announcements" className={({isActive})=> isActive? 'nav-item active':'nav-item'}> <i className="fas fa-bullhorn"></i> <span>Anuncios</span></NavLink>
-        <NavLink to="/modules/points" className={({isActive})=> isActive? 'nav-item active':'nav-item'}> <i className="fas fa-map-marker-alt"></i> <span>Puntos</span></NavLink>
-        <NavLink to="/users" className={({isActive})=> isActive? 'nav-item active':'nav-item'}> <i className="fas fa-users"></i> <span>Usuarios</span></NavLink>
-        <NavLink to="/modules/configuracion" className={({isActive})=> isActive? 'nav-item active':'nav-item'}> <i className="fas fa-cog"></i> <span>Configuración</span></NavLink>
+      <nav className="sidebar-nav">
+        {menuItems.map((item) => (
+          (!item.adminOnly || user?.role === 'SUPER_ADMIN') && (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) => 
+                `nav-item ${isActive ? 'active' : ''}`
+              }
+            >
+              <i className={`fas ${item.icon}`}></i>
+              <span>{item.title}</span>
+            </NavLink>
+          )
+        ))}
       </nav>
 
-      <div style={{marginTop:'auto',padding:16}}>
-        <button className="btn btn-ghost" onClick={handleLogout} style={{width:'100%'}}> <i className="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+      <div className="sidebar-footer">
+        <button className="logout-button" onClick={logout}>
+          <i className="fas fa-sign-out-alt"></i>
+          <span>Cerrar Sesión</span>
+        </button>
       </div>
     </aside>
-  )
-}
+  );
+};
+
+export default Sidebar;

@@ -4,91 +4,149 @@ import BaseForm from '../../components/UI/BaseForm';
 import { MODULE_TYPES } from '../../config/moduleTypes';
 import { localStoreApi } from '../../api/localStoreApi';
 
-export default function ModuleGenericForm(){
+export default function ModuleGenericForm() {
   const { moduleId, id } = useParams();
   const navigate = useNavigate();
-  const moduleType = Object.values(MODULE_TYPES).find(m => m.id === moduleId) || { id: moduleId, name: moduleId, fields: [{name:'name',type:'text'}] };
 
+  
   const [values, setValues] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(()=>{
-    let mounted = true
-    const load = async ()=>{
-      if(id){
-        const item = await localStoreApi.getById(moduleId, id)
-        if(!mounted) return
-        if(item) setValues(item)
+  // Detectar tipo de módulo (por ejemplo: attractions, restaurants)
+  const moduleType =
+    Object.values(MODULE_TYPES).find((m) => m.id === moduleId) || {
+      id: moduleId,
+      name: moduleId,
+      fields: [{ name: 'name', type: 'text', label: 'Nombre' }],
+    };
+
+  // Cargar datos si es edición
+  useEffect(() => {
+    let mounted = true;
+
+    const load = async () => {
+      if (id) {
+        try {
+          const item = await localStoreApi.getById(moduleId, id);
+          if (mounted && item) setValues(item);
+        } catch (err) {
+          console.error(err);
+          setError('Error al cargar datos');
+        }
       } else {
-        // default values
-        const defaults = {}
-        (moduleType.fields||[]).forEach(f=>{
-          defaults[f.name] = f.default || ''
-        })
-        setValues(defaults)
+        // Valores por defecto si es nuevo
+        const defaults = {};
+        (moduleType.fields || []).forEach((f) => {
+          defaults[f.name] = f.default || '';
+        });
+        setValues(defaults);
       }
-    }
-    load()
-    return ()=> mounted = false
-  },[moduleId,id])
+    };
 
-  const handleChange = (name, value) => {
-    setValues(prev=>({ ...prev, [name]: value }))
-  }
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, [moduleId, id]);
 
-  // convert BaseForm 'fields' definition from moduleTypes
-  const formFields = (moduleType.fields||[]).map(f=>{
-    const field = { name: f.name, label: f.label || f.name, type: f.type || 'text', required: !!f.required }
-    if(f.type === 'select' && f.options) field.options = f.options
-    if(f.type === 'file') field.accept = f.accept || 'image/*'
-    return field
-  })
-
-  // intercept file inputs: convert to dataURL
-  const handleSubmit = async (vals)=>{
-    try{
-      setLoading(true)
-      const payload = { ...values }
-      // ensure images array is serialized if files attached via temporary values
-      // already handled by BaseForm as files are passed via onChange
-      if(id){
-        await localStoreApi.update(moduleId, id, payload)
-      } else {
-        await localStoreApi.create(moduleId, payload)
-      }
-      navigate(`/modules/${moduleId}`)
-    }catch(e){
-      setError('Error al guardar')
-      console.error(e)
-    }finally{ setLoading(false) }
-  }
-
+  // Manejo de cambios en campos
   const handleFieldChange = (fieldName, value) => {
-    // if value is FileList or File, convert to dataURL
-    if(value && (value instanceof File || (value instanceof Object && value[0] && value[0] instanceof File))){
-      const files = value instanceof File ? [value] : Array.from(value)
-      Promise.all(files.map(f=> new Promise((res,rej)=>{
-        const r = new FileReader();
-        r.onload = ()=> res(r.result);
-        r.onerror = rej;
-        r.readAsDataURL(f);
-      }))).then(dataUrls=>{
-        // store array or single depending on field
-        setValues(prev=>({ ...prev, [fieldName]: dataUrls.length===1?dataUrls[0]:dataUrls }))
-      }).catch(err=>console.error(err))
+    // Si es un archivo (imagen), convertir a base64
+    if (
+      value &&
+      (value instanceof File ||
+        (value instanceof Object && value[0] && value[0] instanceof File))
+    ) {
+      const files = value instanceof File ? [value] : Array.from(value);
+      Promise.all(
+        files.map(
+          (f) =>
+            new Promise((res, rej) => {
+              const reader = new FileReader();
+              reader.onload = () => res(reader.result);
+              reader.onerror = rej;
+              reader.readAsDataURL(f);
+            })
+        )
+      )
+        .then((dataUrls) => {
+          setValues((prev) => ({
+            ...prev,
+            [fieldName]: dataUrls.length === 1 ? dataUrls[0] : dataUrls,
+          }));
+        })
+        .catch((err) => console.error(err));
     } else {
-      handleChange(fieldName, value)
+      setValues((prev) => ({ ...prev, [fieldName]: value }));
     }
-  }
+  };
 
-  if(!moduleType) return <div>Módulo desconocido</div>
+  // Enviar formulario
+  const handleSubmit = async (formData) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const payload = {
+        ...formData,
+        _id: id || formData.name?.toLowerCase().replace(/\s+/g, '-') || '',
+        location: {
+          address: formData.location?.address || '',
+          coords: {
+            lat: formData.location?.lat || '',
+            lng: formData.location?.lng || '',
+          },
+        },
+        contact: {
+          mail: formData.contact?.mail || '',
+          phone: formData.contact?.phone || '',
+          link: formData.contact?.link || '',
+        },
+      };
+
+      if (id) {
+        await localStoreApi.update(moduleId, id, payload);
+      } else {
+        await localStoreApi.create(moduleId, payload);
+      }
+
+      navigate(`/modules/${moduleId}`);
+    } catch (e) {
+      console.error(e);
+      setError('Error al guardar');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Convertir campos del módulo en definición para BaseForm
+  const formFields = (moduleType.fields || []).map((f) => {
+    const field = {
+      name: f.name,
+      label: f.label || f.name,
+      type: f.type || 'text',
+      required: !!f.required,
+    };
+    if (f.type === 'select' || f.type === 'multiselect') {
+      field.options = f.options || [];
+    }
+    if (f.type === 'file' || f.type === 'image') {
+      field.accept = f.accept || 'image/*';
+    }
+    return field;
+  });
+
+  if (!moduleType) return <div>Módulo desconocido</div>;
 
   return (
     <div>
-      <h2>{id ? 'Editar' : 'Nuevo'} - {moduleType.name}</h2>
+      <h2 className="text-xl font-bold mb-4">
+        {id ? 'Editar' : 'Nuevo'} - {moduleType.name}
+      </h2>
+
       <BaseForm
-        title={`${id? 'Editar':'Nuevo'} ${moduleType.name}`}
+        title={`${id ? 'Editar' : 'Nuevo'} ${moduleType.name}`}
         fields={formFields}
         values={values}
         onChange={handleFieldChange}
@@ -97,5 +155,5 @@ export default function ModuleGenericForm(){
         error={error}
       />
     </div>
-  )
+  );
 }

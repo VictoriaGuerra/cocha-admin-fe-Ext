@@ -1,8 +1,15 @@
-// src/auth/AuthContext.jsx
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import * as mockApi from '../api/mockApi';
 
 export const AuthContext = createContext();
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
 const CURRENT_USER_KEY = 'vc_current_user'
 

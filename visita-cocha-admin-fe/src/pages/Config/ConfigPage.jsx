@@ -1,56 +1,237 @@
 import React, { useContext, useState, useEffect } from 'react'
 import { AuthContext } from '../../auth/AuthContext'
+import '../../styles/profile.css'
 
-export default function ConfigPage(){
+export default function ConfigPage() {
   const { user, updateProfile } = useContext(AuthContext)
-  const [form, setForm] = useState({ name: '', email: '', photo: '' })
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    photo: '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  })
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
 
-  useEffect(()=>{
-    if (user) setForm({ name: user.name || '', email: user.email || '', photo: user.photo || '' })
-  },[user])
+  useEffect(() => {
+    if (user) {
+      setForm(prev => ({
+        ...prev,
+        name: user.name || '',
+        email: user.email || '',
+        photo: user.photo || ''
+      }))
+    }
+  }, [user])
 
-  const handleFile = (e)=>{
+  const handleFile = (e) => {
     const file = e.target.files && e.target.files[0]
     if (!file) return
+    
+    // Validar tamaño máximo (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setError('La imagen no debe superar los 2MB')
+      return
+    }
+
     const reader = new FileReader()
-    reader.onload = ()=> setForm(f => ({ ...f, photo: reader.result }))
+    reader.onload = () => {
+      setForm(prev => ({ ...prev, photo: reader.result }))
+      setError('')
+    }
+    reader.onerror = () => setError('Error al leer el archivo')
     reader.readAsDataURL(file)
   }
 
-  const handleSave = async (ev)=>{
+  const validatePassword = () => {
+    if (!form.currentPassword) {
+      setError('Ingresa tu contraseña actual')
+      return false
+    }
+    if (form.newPassword.length < 8) {
+      setError('La nueva contraseña debe tener al menos 8 caracteres')
+      return false
+    }
+    if (form.newPassword !== form.confirmPassword) {
+      setError('Las contraseñas no coinciden')
+      return false
+    }
+    return true
+  }
+
+  const handleSave = async (ev) => {
     ev.preventDefault()
-    if (!user) return
+    setError('')
+    setSuccess('')
+    
+    // Validar campos requeridos
+    if (!form.name.trim() || !form.email.trim()) {
+      setError('Nombre y correo son requeridos')
+      return
+    }
+
+    // Validar formato de correo
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(form.email)) {
+      setError('Ingresa un correo válido')
+      return
+    }
+
     setSaving(true)
-    try{
-      await updateProfile(user.id, { name: form.name, email: form.email, photo: form.photo })
-      alert('Perfil actualizado')
-    }catch(e){ console.error(e); alert('Error al guardar') }
+    try {
+      const updateData = {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        photo: form.photo
+      }
+
+      if (isChangingPassword) {
+        if (!validatePassword()) {
+          setSaving(false)
+          return
+        }
+        updateData.currentPassword = form.currentPassword
+        updateData.newPassword = form.newPassword
+      }
+
+      await updateProfile(user.id, updateData)
+      setSuccess('¡Perfil actualizado correctamente!')
+      setIsChangingPassword(false)
+      setForm(prev => ({
+        ...prev,
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      }))
+    } catch(e) {
+      console.error(e)
+      setError(e.message || 'Error al actualizar el perfil')
+    }
     setSaving(false)
   }
 
   return (
-    <div>
-      <h2>Configuración de perfil</h2>
-      <div className="form-card" style={{ maxWidth: 760, marginTop: 12 }}>
-        <form onSubmit={handleSave}>
-          <div style={{ display: 'flex', gap: 18, alignItems: 'center' }}>
-            <div>
-              <div style={{ width: 96, height: 96, borderRadius: 12, overflow: 'hidden', background: '#f3f4f6' }}>
-                {form.photo ? <img src={form.photo} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ padding: 18, color: '#9ca3af' }}>Foto</div>}
-              </div>
-              <input type="file" accept="image/*" onChange={handleFile} style={{ marginTop: 8 }} />
+    <div className="profile-page">
+      <div className="profile-header">
+        <i className="fas fa-user-circle"></i>
+        <h2 className="profile-title">Configuración de perfil</h2>
+      </div>
+
+      <div className="profile-card">
+        <form onSubmit={handleSave} className="profile-form">
+          <div className="profile-avatar">
+            <div className="avatar-container">
+              {form.photo ? (
+                <img src={form.photo} alt="Avatar" />
+              ) : (
+                <div className="avatar-placeholder">
+                  <i className="fas fa-user"></i>
+                </div>
+              )}
             </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', marginBottom: 6 }}>Nombre</label>
-              <input value={form.name} onChange={e=>setForm(f=>({...f, name: e.target.value}))} className="input" style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid var(--border-color)' }} />
+            <div className="file-input-container">
+              <label className="file-input-button">
+                <i className="fas fa-camera"></i>
+                Cambiar foto
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFile}
+                  className="file-input"
+                />
+              </label>
+            </div>
+          </div>
 
-              <label style={{ display: 'block', marginTop: 12, marginBottom: 6 }}>Correo</label>
-              <input value={form.email} onChange={e=>setForm(f=>({...f, email: e.target.value}))} className="input" style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid var(--border-color)' }} />
+          <div className="profile-form-fields">
+            <div className="form-group">
+              <label className="form-label">Nombre</label>
+              <input
+                type="text"
+                value={form.name}
+                onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
+                className="form-input"
+                placeholder="Tu nombre completo"
+              />
+            </div>
 
-              <div style={{ marginTop: 14 }}>
-                <button className="btn btn-primary" type="submit" disabled={saving}>{saving ? 'Guardando...' : 'Guardar perfil'}</button>
-              </div>
+            <div className="form-group">
+              <label className="form-label">Correo electrónico</label>
+              <input
+                type="email"
+                value={form.email}
+                onChange={e => setForm(prev => ({ ...prev, email: e.target.value }))}
+                className="form-input"
+                placeholder="tu@correo.com"
+              />
+            </div>
+
+            <div className="password-group">
+              <h3 className="password-title">Cambiar contraseña</h3>
+              <label className="form-checkbox">
+                <input
+                  type="checkbox"
+                  checked={isChangingPassword}
+                  onChange={e => setIsChangingPassword(e.target.checked)}
+                /> Quiero cambiar mi contraseña
+              </label>
+
+              {isChangingPassword && (
+                <>
+                  <div className="form-group">
+                    <label className="form-label">Contraseña actual</label>
+                    <input
+                      type="password"
+                      value={form.currentPassword}
+                      onChange={e => setForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                      className="form-input"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Nueva contraseña</label>
+                    <input
+                      type="password"
+                      value={form.newPassword}
+                      onChange={e => setForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                      className="form-input"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Confirmar nueva contraseña</label>
+                    <input
+                      type="password"
+                      value={form.confirmPassword}
+                      onChange={e => setForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                      className="form-input"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
+            {error && <div className="error-message"><i className="fas fa-exclamation-circle"></i> {error}</div>}
+            {success && <div className="success-message"><i className="fas fa-check-circle"></i> {success}</div>}
+
+            <div className="form-actions">
+              <button type="submit" className="save-button" disabled={saving}>
+                {saving ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin"></i>
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-save"></i>
+                    Guardar cambios
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </form>

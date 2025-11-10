@@ -1,85 +1,63 @@
-// src/components/Login.jsx
 import React, { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../auth/AuthContext';
-import '../styles/login.css'; 
 import logo from '../assets/images/logo.png';
-import logoCocha from '../assets/images/logoCocha.png';
+import styles from './Login.module.css';
 
 export default function Login() {
-  const { login } = useContext(AuthContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
-    // pequeña pausa estética y login async
-    setTimeout(async () => {
-      try{
-        const success = await login(email, password)
-        if (!success) {
-          setError('Usuario o contraseña incorrecta')
-          setLoading(false)
-        }
-      }catch(e){
-        setError('Error en inicio de sesión')
-        setLoading(false)
+    try {
+      const success = await login(email, password);
+      if (success) {
+        navigate('/');
+      } else {
+        setError('Credenciales inválidas');
       }
-    }, 500);
+    } catch (err) {
+      setError('Error al intentar iniciar sesión');
+    }
   };
 
   return (
-    <div className="login-page">
-      <div className="login-container">
-        <div className="login-logo">
-          <img src={logo} alt="Visita Cocha Logo" />
-        </div>
-
-      <p className="welcome-message">Bienvenido a Visita Cocha — Admin</p>
-      {error && <div className="error-message">{error}</div>}
-
-      <form onSubmit={handleSubmit}>
-        <div className="input-group">
-          <i className="fas fa-envelope input-icon"></i>
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-
-        <div className="input-group">
-          <i className="fas fa-lock input-icon"></i>
-          <input
-            type="password"
-            placeholder="Contraseña"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-
-        <button className="btn-login" type="submit" disabled={loading}>
-          {loading && <div className="spinner"></div>}
-          {loading ? 'Ingresando...' : 'Iniciar Sesión'}
-        </button>
-      </form>
-
-      <div className="secondary-actions">
-        <a href="#" className="forgot-password">¿Olvidaste tu contraseña?</a>
+    <div className={styles.loginContainer}>
+      <div className={styles.loginBox}>
+        <img src={logo} alt="Visita Cocha" className={styles.loginLogo} />
+        <h2>Iniciar Sesión</h2>
+        <form onSubmit={handleSubmit}>
+          {error && <div className={styles.error}>{error}</div>}
+          <div className={styles.formGroup}>
+            <label htmlFor="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className={styles.formGroup}>
+            <label htmlFor="password">Contraseña</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <button type="submit" className={styles.loginButton}>
+            Iniciar Sesión
+          </button>
+        </form>
       </div>
-
-      <p className="superadmin-text">Solo SuperAdmin puede ingresar</p>
-
-      <div className="login-footer">
-        <img src={logoCocha} alt="Escudo de Cochabamba" className="cocha-shield" />
-      </div>
-    </div>
     </div>
   );
 }

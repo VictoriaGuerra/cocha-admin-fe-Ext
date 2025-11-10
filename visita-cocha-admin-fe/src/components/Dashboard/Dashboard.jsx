@@ -1,164 +1,174 @@
 // src/components/Dashboard/Dashboard.jsx
 import React, { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '../../auth/AuthContext';
+import { usePermissions } from '../../auth/permissions';
 import UserTable from './UserTable';
 import ModuleTable from './ModuleTable';
-import { NavLink } from 'react-router-dom';
 import * as mockApi from '../../api/mockApi';
 import { localStoreApi } from '../../api/localStoreApi';
-import { stats as mockStats } from '../../data/statsData';
 import StatsCard from './StatsCard';
 import StatsChart from './StatsChart';
 import '../../styles/dashboard.css';
-import logo from '../../assets/images/logo.png';
-import logoCocha from '../../assets/images/logoCocha.png';
 
 export default function Dashboard() {
-  const { user, logout } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
+  const canViewUsers = usePermissions(user?.role, 'users', 'read');
+  const canViewModules = usePermissions(user?.role, 'modules', 'read');
 
   const [statsSummary, setStatsSummary] = useState([
-    { title: 'Usuarios', value: 0 },
-    { title: 'Módulos', value: 0 },
-    { title: 'Eventos', value: 0 },
+    { title: 'Usuarios', value: 0, icon: 'fa-users', variant: 'green' },
+    { title: 'Módulos', value: 0, icon: 'fa-cubes', variant: 'purple' },
+    { title: 'Eventos', value: 0, icon: 'fa-calendar', variant: 'orange' },
   ])
 
   const [usersList, setUsersList] = useState([])
-  const [collapsed, setCollapsed] = useState(false)
   const [modules, setModules] = useState([])
 
-  useEffect(()=>{
+  useEffect(() => {
     let mounted = true
-    const load = async ()=>{
-      try{
-        const list = await mockApi.getModules()
-        if (mounted) setModules(list)
-      }catch(e){ console.error(e) }
+    
+    const load = async () => {
+      try {
+        if (canViewModules) {
+          const list = await mockApi.getModules()
+          if (mounted) setModules(list)
+        }
+      } catch(e) { console.error(e) }
     }
+    
     load()
-    return ()=> mounted = false
-  },[])
+    return () => mounted = false
+  }, [canViewModules])
 
-  useEffect(()=>{
+  useEffect(() => {
     let mounted = true
-    const loadUsers = async ()=>{
-      try{
-        const us = await mockApi.getUsers()
-        if (mounted) setUsersList(us)
-      }catch(e){ console.error(e) }
+    
+    const loadUsers = async () => {
+      try {
+        if (canViewUsers) {
+          const us = await mockApi.getUsers()
+          if (mounted) setUsersList(us)
+        }
+      } catch(e) { console.error(e) }
     }
+    
     loadUsers()
-    return ()=> mounted = false
-  },[])
+    return () => mounted = false
+  }, [canViewUsers])
 
-  // load counts for stats and poll periodically (simulate realtime)
-  useEffect(()=>{
+  // Cargar estadísticas y actualizar periódicamente (simular tiempo real)
+  useEffect(() => {
     let mounted = true
-    const loadCounts = async ()=>{
-      try{
-        const users = await mockApi.getUsers()
-        const mods = await mockApi.getModules()
-
-        // count items across a few modules using localStoreApi
-        const attractionItems = (await localStoreApi.getAll('attractions')) || []
-        const restaurantItems = (await localStoreApi.getAll('restaurants')) || []
-        const eventsItems = (await localStoreApi.getAll('events')) || []
+    const loadCounts = async () => {
+      try {
+        const [users, mods, events] = await Promise.all([
+          mockApi.getUsers(),
+          mockApi.getModules(),
+          localStoreApi.getAll('events')
+        ]);
 
         if (!mounted) return
-        setStatsSummary([
-          { title: 'Usuarios', value: users.length },
-          { title: 'Módulos', value: mods.length },
-          { title: 'Eventos', value: eventsItems.length },
+        
+        setStatsSummary(prev => [
+          { ...prev[0], value: users.length },
+          { ...prev[1], value: mods.length },
+          { ...prev[2], value: events?.length || 0 }
         ])
-      }catch(e){ console.error(e) }
+      } catch(e) { 
+        console.error('Error al cargar estadísticas:', e) 
+      }
     }
 
     loadCounts()
-    const id = setInterval(loadCounts, 10000) // refresh every 10s
-    return ()=>{ mounted = false; clearInterval(id) }
-  },[])
+    const id = setInterval(loadCounts, 30000) // actualizar cada 30s
+    return () => { 
+      mounted = false
+      clearInterval(id) 
+    }
+  }, [])
 
   return (
     <div className="dashboard-page">
-      <div className="dashboard-shell">
-        <aside className={`sidebar-container${collapsed ? ' collapsed' : ''}`}>
-          <div style={{ padding: '18px 22px' }}>
-            <img src={logo} alt="Visita Cocha" style={{ width: 140, display: 'block', marginBottom: 14 }} />
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 14 }}>
-              <img src={user?.photo || logoCocha} alt="Usuario" style={{ width: 44, height:44, objectFit:'cover', borderRadius: 8 }} />
-              <div>
-                <div style={{ fontWeight: 700 }}>{user?.name || user?.email || 'Usuario'}</div>
-                <div style={{ fontSize: 13, color: '#6b7280' }}>{(user?.roles||[]).join(', ')}</div>
-              </div>
+      <div className="dashboard-content">
+        <div className="dashboard-header">
+          <div>
+            <h1 className="dashboard-title">
+              <i className="fas fa-chart-line"></i>
+              Panel de Control
+            </h1>
+            <div className="dashboard-welcome">
+              Bienvenido, {user?.name || 'Usuario'}
             </div>
           </div>
-
-          <nav style={{ padding: '8px 12px' }}>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              <li className="nav-item"><NavLink to="/" className={({isActive})=> isActive? 'nav-item active' : 'nav-item'} style={{ color: 'inherit', textDecoration: 'none' }}><i className="fas fa-home"></i> <span>Dashboard</span></NavLink></li>
-              <li className="nav-item">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                  <NavLink to="/modules" className={({isActive})=> isActive? 'nav-item active' : 'nav-item'} style={{ color: 'inherit', textDecoration: 'none', flex: 1 }}><i className="fas fa-th-large"></i> <span>Módulos</span></NavLink>
-                </div>
-                {/* submenu: list modules loaded from storage */}
-                <ul style={{ listStyle: 'none', paddingLeft: 12, marginTop: 6 }}>
-                  {modules.map(m => (
-                    <li key={m.id} style={{ marginBottom: 6 }}>
-                      <NavLink to={`/modules/${m.id}`} style={{ color: '#374151', textDecoration: 'none', fontSize: 13 }}>{m.name}</NavLink>
-                    </li>
-                  ))}
-                </ul>
-              </li>
-              <li className="nav-item"><NavLink to="/users" className={({isActive})=> isActive? 'nav-item active' : 'nav-item'} style={{ color: 'inherit', textDecoration: 'none' }}><i className="fas fa-users"></i> <span>Usuarios</span></NavLink></li>
-              <li className="nav-item"><NavLink to="/modules/configuracion" className={({isActive})=> isActive? 'nav-item active' : 'nav-item'} style={{ color: 'inherit', textDecoration: 'none' }}><i className="fas fa-cog"></i> <span>Configuración</span></NavLink></li>
-            </ul>
-          </nav>
-        </aside>
-
-        <main className="main-content">
-          <header className="header-container">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <button className="btn" onClick={()=>setCollapsed(v=>!v)} aria-label="Toggle sidebar">☰</button>
-              <input placeholder="Buscar" style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-color)', minWidth: 220 }} />
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <button className="btn" onClick={() => {}}>🔔</button>
-              <button className="btn" onClick={() => {}} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <img src={user?.photo || logoCocha} alt="avatar" className="avatar" />
-                <span style={{ display: 'inline-block' }}>{user?.name || user?.email}</span>
-              </button>
-              <button onClick={logout} className="btn">Cerrar sesión</button>
-            </div>
-          </header>
-
-          <div className="stats-panel" style={{ marginTop: 18 }}>
-            <div className="stats-grid">
-              {statsSummary.map((s, i) => (
-                <StatsCard
-                  key={i}
-                  index={i}
-                  title={s.title}
-                  value={s.value}
-                  icon={i === 0 ? <i className="fas fa-users" /> : i === 1 ? <i className="fas fa-th-large" /> : i === 2 ? <i className="fas fa-calendar-alt" /> : <i className="fas fa-file-alt" />}
-                  variant={i === 0 ? 'purple' : i === 1 ? 'orange' : i === 2 ? 'red' : 'green'}
-                  tooltip={`${s.title}: ${s.value}`}
-                />
-              ))}
-            </div>
+          <div className="dashboard-actions">
+            <button className="btn btn-icon" title="Actualizar datos">
+              <i className="fas fa-sync-alt"></i>
+            </button>
+            <button className="btn btn-icon" title="Exportar datos">
+              <i className="fas fa-download"></i>
+            </button>
+            <button className="btn btn-primary">
+              <i className="fas fa-plus"></i>
+              Nuevo Reporte
+            </button>
           </div>
+        </div>
 
-          <h2 style={{ marginTop: 28 }}>Gráfico de Módulos</h2>
-          <StatsChart data={statsSummary.map(s => ({ name: s.title, value: s.value }))} />
+        <div className="stats-panel">
+          <div className="stats-grid">
+            {statsSummary.map((stat, index) => (
+              <StatsCard
+                key={index}
+                index={index}
+                title={stat.title}
+                value={stat.value}
+                icon={<i className={`fas ${stat.icon}`}></i>}
+                variant={stat.variant}
+                tooltip={`Total de ${stat.title.toLowerCase()}: ${stat.value}`}
+              />
+            ))}
+          </div>
+        </div>
 
-          <section style={{ marginTop: 22 }}>
-            <h2>Usuarios</h2>
-            <UserTable users={usersList} />
+        <section className="chart-section">
+          <div className="section-header">
+            <h2>
+              <i className="fas fa-chart-bar"></i>
+              Análisis de Actividad
+            </h2>
+          </div>
+          <div className="chart-container">
+            <StatsChart data={statsSummary.map(s => ({ name: s.title, value: s.value }))} />
+          </div>
+        </section>
+
+        {canViewUsers && (
+          <section className="data-section">
+            <div className="section-header">
+              <h2>
+                <i className="fas fa-users"></i>
+                Usuarios del Sistema
+              </h2>
+            </div>
+            <div className="section-content">
+              <UserTable users={usersList} />
+            </div>
           </section>
+        )}
 
-          <section style={{ marginTop: 22 }}>
-            <h2>Módulos</h2>
-            <ModuleTable />
+        {canViewModules && (
+          <section className="data-section">
+            <div className="section-header">
+              <h2>
+                <i className="fas fa-cubes"></i>
+                Módulos Activos
+              </h2>
+            </div>
+            <div className="section-content">
+              <ModuleTable />
+            </div>
           </section>
-        </main>
+        )}
       </div>
     </div>
   );

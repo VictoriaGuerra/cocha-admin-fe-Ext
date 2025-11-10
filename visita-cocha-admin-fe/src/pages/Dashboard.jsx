@@ -14,6 +14,9 @@ return (
 </div>
 </div>
 
+<div className="logo-container">
+  <img src="/logo192.png" alt="Logo" className="logo" />
+</div>
 
 <section className="bg-white p-4 shadow rounded">
 <h2 className="font-semibold mb-2">Resumen</h2>

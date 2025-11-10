@@ -5,14 +5,20 @@ export const MODULE_TYPES = {
     name: 'Atractivos Turísticos',
     icon: 'fa-landmark',
     fields: [
-      { name: 'name', type: 'text', required: true },
-      { name: 'description', type: 'textarea', required: true },
-      { name: 'location', type: 'map', required: true },
-      { name: 'images', type: 'gallery', multiple: true },
-      { name: 'category', type: 'select', required: true },
-      { name: 'tags', type: 'tags', multiple: true },
-      { name: 'schedule', type: 'schedule' },
-      { name: 'contact', type: 'contact' }
+      { name: 'name', type: 'text', required: true, label: 'Nombre' },
+      { name: 'description', type: 'textarea', required: true, label: 'Descripción' },
+      { name: 'accessibility', type: 'text', label: 'Accesibilidad' },
+      { name: 'available', type: 'boolean', label: 'Disponible' },
+      { name: 'categories', type: 'select', multiple: true, label: 'Categorías' },
+      { name: 'contact', type: 'object', label: 'Contacto' },
+      { name: 'coverUrl', type: 'image', label: 'Imagen de portada' },
+      { name: 'faq', type: 'array', label: 'Preguntas frecuentes' },
+      { name: 'foods', type: 'array', label: 'Comidas' },
+      { name: 'location', type: 'object', label: 'Ubicación' },
+      { name: 'coords', type: 'map', label: 'Coordenadas' },
+      { name: 'mainCategories', type: 'select', multiple: true, label: 'Categorías principales' },
+      { name: 'order', type: 'number', label: 'Orden' },
+      { name: 'rating', type: 'number', label: 'Calificación' }
     ]
   },
   RESTAURANTS: {

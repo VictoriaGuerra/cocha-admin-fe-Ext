@@ -1,71 +1,93 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+﻿import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import BaseList from '../../components/UI/BaseList';
 import { localStoreApi } from '../../api/localStoreApi';
-import { MODULE_TYPES } from '../../config/moduleTypes';
 
-export default function ModuleGenericList(){
-  const { moduleId } = useParams();
+const ModuleGenericList = () => {
+  const { moduleType } = useParams();
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const moduleType = Object.values(MODULE_TYPES).find(m => m.id === moduleId) || { id: moduleId, name: moduleId };
 
-  useEffect(()=>{
-    let mounted = true
-    const load = async ()=>{
-      setLoading(true)
-      const data = await localStoreApi.getAll(moduleId)
-      if(!mounted) return
-      setItems(data)
-      setLoading(false)
+  useEffect(() => {
+    const loadData = async () => {
+      if (!moduleType) {
+        navigate('/modules');
+        return;
+      }
+
+      try {
+        const data = await localStoreApi.getAll(moduleType);
+        setItems(data || []);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [moduleType, navigate]);
+
+  const handleCreate = () => {
+    navigate(`/modules/${moduleType}/new`);
+  };
+
+  const handleEdit = (item) => {
+    navigate(`/modules/${moduleType}/edit/${item.id}`);
+  };
+
+  const handleView = (item) => {
+    navigate(`/modules/${moduleType}/${item.id}`);
+  };
+
+  const handleDelete = async (item) => {
+    if (window.confirm('¿Está seguro de eliminar este elemento?')) {
+      try {
+        await localStoreApi.delete(moduleType, item.id);
+        const updatedData = await localStoreApi.getAll(moduleType);
+        setItems(updatedData || []);
+      } catch (error) {
+        console.error('Error deleting:', error);
+        alert('Error al eliminar el elemento');
+      }
     }
-    load()
-    return ()=> mounted = false
-  },[moduleId])
+  };
 
-  const handleEdit = (id)=>{
-    navigate(`/modules/${moduleId}/${id}`)
+  if (loading) {
+    return <div className="loading">Cargando...</div>;
   }
-  const handleCreate = ()=>{
-    navigate(`/modules/${moduleId}/new`)
-  }
-  const handleDelete = async (id)=>{
-    if(!confirm('¿Eliminar este elemento?')) return
-    await localStoreApi.delete(moduleId, id)
-    const data = await localStoreApi.getAll(moduleId)
-    setItems(data)
-  }
-  const handleView = (id)=>{ navigate(`/modules/${moduleId}/${id}`) }
 
-  const columns = [
-    { key: 'id', label: 'ID' },
-    { key: 'name', label: 'Nombre' },
-    { key: 'status', label: 'Estado' },
-    { key: 'createdAt', label: 'Creado', render: (v)=> v ? new Date(v).toLocaleString() : '' }
-  ]
-
-  if(loading) return <div>Cargando {moduleType.name}...</div>
+  const moduleTitle = {
+    attractions: 'Atracciones Turísticas',
+    restaurants: 'Restaurantes',
+    hotels: 'Hoteles',
+    events: 'Eventos'
+  }[moduleType] || moduleType;
 
   return (
-    <div>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
-        <h2 style={{margin:0}}>{moduleType.name}</h2>
-        <div>
-          <button className="btn btn-primary" onClick={handleCreate}>+ Agregar nuevo</button>
-        </div>
+    <div className="module-container">
+      <div className="module-header">
+        <h2>{moduleTitle}</h2>
+        <button className="btn btn-primary" onClick={handleCreate}>
+          + Agregar nuevo
+        </button>
       </div>
 
       <BaseList
-        title={moduleType.name}
+        title={moduleTitle}
         items={items}
-        columns={columns}
+        columns={[
+          { key: 'name', label: 'Nombre' },
+          { key: 'description', label: 'Descripción' },
+          { key: 'status', label: 'Estado' }
+        ]}
+        onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        onView={handleView}
-        canEdit={true}
-        canDelete={true}
       />
     </div>
-  )
-}
+  );
+};
+
+export default ModuleGenericList;
