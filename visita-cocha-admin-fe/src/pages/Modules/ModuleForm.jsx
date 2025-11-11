@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import * as mockApi from '../../api/mockApi'
+import * as api from '../../api'
 import { roles as ROLE_CONST } from '../../auth/roles'
 
 export default function ModuleForm({ editing, onClose }){
@@ -12,8 +12,8 @@ export default function ModuleForm({ editing, onClose }){
   const handleSubmit = async (e)=>{
     e.preventDefault(); setError(null); setSaving(true)
     try{
-      if (editing) await mockApi.updateModule(editing.id, { name, status, allowedRoles })
-      else await mockApi.createModule({ name, status, allowedRoles })
+  if (editing) await api.updateModule(editing.id, { name, status, allowedRoles })
+  else await api.createModule({ name, status, allowedRoles })
       onClose()
     }catch(err){ setError(err.message || 'Error') }
     setSaving(false)

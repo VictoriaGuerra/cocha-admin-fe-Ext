@@ -29,6 +29,16 @@ const Sidebar = () => {
       icon: 'fa-utensils',
     },
     {
+      title: 'Comidas',
+      path: '/modules/foods',
+      icon: 'fa-apple-alt',
+    },
+    {
+      title: 'Itinerarios',
+      path: '/modules/itineraries',
+      icon: 'fa-route',
+    },
+    {
       title: 'Eventos',
       path: '/modules/events',
       icon: 'fa-calendar-alt',
@@ -57,6 +67,12 @@ const Sidebar = () => {
       title: 'Usuarios',
       path: '/users',
       icon: 'fa-users',
+      superAdminOnly: true,
+    },
+    {
+      title: 'Correos',
+      path: '/emails',
+      icon: 'fa-envelope',
       adminOnly: true,
     },
     {
@@ -77,20 +93,22 @@ const Sidebar = () => {
       </div>
 
       <nav className="sidebar-nav">
-        {menuItems.map((item) => (
-          (!item.adminOnly || user?.role === 'SUPER_ADMIN') && (
+        {menuItems.map((item) => {
+          const canSee = item.superAdminOnly
+            ? (user?.roles?.includes('SuperAdmin'))
+            : (!item.adminOnly || (user?.roles && (user.roles.includes('SuperAdmin') || user.roles.includes('Admin'))));
+          if (!canSee) return null;
+          return (
             <NavLink
               key={item.path}
               to={item.path}
-              className={({ isActive }) => 
-                `nav-item ${isActive ? 'active' : ''}`
-              }
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
             >
               <i className={`fas ${item.icon}`}></i>
               <span>{item.title}</span>
             </NavLink>
-          )
-        ))}
+          );
+        })}
       </nav>
 
       <div className="sidebar-footer">

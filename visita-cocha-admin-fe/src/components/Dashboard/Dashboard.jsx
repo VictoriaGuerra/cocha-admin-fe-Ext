@@ -4,8 +4,9 @@ import { AuthContext } from '../../auth/AuthContext';
 import { usePermissions } from '../../auth/permissions';
 import UserTable from './UserTable';
 import ModuleTable from './ModuleTable';
-import * as mockApi from '../../api/mockApi';
+import * as api from '../../api';
 import { localStoreApi } from '../../api/localStoreApi';
+import { USE_BACKEND, getContentList } from '../../api';
 import StatsCard from './StatsCard';
 import StatsChart from './StatsChart';
 import '../../styles/dashboard.css';
@@ -30,7 +31,7 @@ export default function Dashboard() {
     const load = async () => {
       try {
         if (canViewModules) {
-          const list = await mockApi.getModules()
+          const list = await api.getModules()
           if (mounted) setModules(list)
         }
       } catch(e) { console.error(e) }
@@ -46,7 +47,7 @@ export default function Dashboard() {
     const loadUsers = async () => {
       try {
         if (canViewUsers) {
-          const us = await mockApi.getUsers()
+          const us = await api.getUsers()
           if (mounted) setUsersList(us)
         }
       } catch(e) { console.error(e) }
@@ -61,18 +62,16 @@ export default function Dashboard() {
     let mounted = true
     const loadCounts = async () => {
       try {
-        const [users, mods, events] = await Promise.all([
-          mockApi.getUsers(),
-          mockApi.getModules(),
-          localStoreApi.getAll('events')
-        ]);
+        let users = []
+        let mods = []
+        const events = await (USE_BACKEND ? getContentList('events') : localStoreApi.getAll('events'))
 
         if (!mounted) return
         
         setStatsSummary(prev => [
           { ...prev[0], value: users.length },
           { ...prev[1], value: mods.length },
-          { ...prev[2], value: events?.length || 0 }
+          { ...prev[2], value: (Array.isArray(events) ? events.length : 0) }
         ])
       } catch(e) { 
         console.error('Error al cargar estadísticas:', e) 

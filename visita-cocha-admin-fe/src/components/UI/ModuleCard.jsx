@@ -37,20 +37,14 @@ const ModuleCard = ({
       </div>
 
       <div className="module-card-footer">
-        <Link 
-          to={`${route}/list`} 
-          className="btn btn-secondary"
-        >
+        <Link to={route} className="btn btn-secondary">
           <i className="fas fa-list"></i>
           Ver lista
         </Link>
         {canEdit && (
-          <Link 
-            to={`${route}/new`} 
-            className="btn btn-primary"
-          >
+          <Link to={`${route}${route === '/users' ? '/new' : '/new'}`} className="btn btn-primary">
             <i className="fas fa-plus"></i>
-            Agregar
+            {route === '/users' ? 'Crear usuario' : 'Agregar'}
           </Link>
         )}
       </div>

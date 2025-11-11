@@ -1,3 +1,44 @@
+/* Pills para categorías */
+.pill-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.pill {
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border-color, #ddd);
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+    transition: all .15s ease-in-out;
+    font-size: 0.9rem;
+}
+
+.pill:hover { background: #f7f7f7; }
+
+.pill.active {
+    background: var(--primary, #2563eb);
+    color: #fff;
+    border-color: var(--primary, #2563eb);
+}
+
+.pill .icon-thumb {
+    width: 18px;
+    height: 18px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
+.pill-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    background: #eee;
+}
 .categories-manager {
     padding: 2rem;
 }

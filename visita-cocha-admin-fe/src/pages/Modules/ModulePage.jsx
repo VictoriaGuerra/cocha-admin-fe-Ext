@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import * as mockApi from '../../api/mockApi'
+import * as api from '../../api'
 
 export default function ModulePage(){
   const { moduleId } = useParams()
@@ -12,7 +12,7 @@ export default function ModulePage(){
     let mounted = true
     const load = async ()=>{
       setLoading(true)
-      const list = await mockApi.getModules()
+  const list = await api.getModules()
       const found = list.find(m=>m.id === moduleId)
       if (mounted) setMod(found)
       setLoading(false)

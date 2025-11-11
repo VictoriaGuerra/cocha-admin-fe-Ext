@@ -10,7 +10,8 @@ const BaseList = ({
   onDelete,
   onView,
   canEdit,
-  canDelete
+  canDelete,
+  canAdd = true
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -43,7 +44,7 @@ const BaseList = ({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          {canEdit && (
+          {canAdd && (
             <button 
               className="btn btn-primary"
               onClick={() => onEdit()}
@@ -136,7 +137,8 @@ BaseList.propTypes = {
   onDelete: PropTypes.func.isRequired,
   onView: PropTypes.func.isRequired,
   canEdit: PropTypes.bool,
-  canDelete: PropTypes.bool
+  canDelete: PropTypes.bool,
+  canAdd: PropTypes.bool
 };
 
 export default BaseList;

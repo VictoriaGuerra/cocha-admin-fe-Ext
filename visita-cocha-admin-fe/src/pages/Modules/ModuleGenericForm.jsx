@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import BaseForm from '../../components/UI/BaseForm';
 import { MODULE_TYPES } from '../../config/moduleTypes';
 import { localStoreApi } from '../../api/localStoreApi';
+import { USE_BACKEND, getContentById, createContent, updateContent } from '../../api';
 
 export default function ModuleGenericForm() {
   const { moduleId, id } = useParams();
@@ -28,7 +29,7 @@ export default function ModuleGenericForm() {
     const load = async () => {
       if (id) {
         try {
-          const item = await localStoreApi.getById(moduleId, id);
+          const item = USE_BACKEND ? await getContentById(moduleId, id) : await localStoreApi.getById(moduleId, id);
           if (mounted && item) setValues(item);
         } catch (err) {
           console.error(err);
@@ -105,10 +106,12 @@ export default function ModuleGenericForm() {
         },
       };
 
-      if (id) {
-        await localStoreApi.update(moduleId, id, payload);
+      if (USE_BACKEND) {
+        if (id) await updateContent(moduleId, id, payload)
+        else await createContent(moduleId, payload)
       } else {
-        await localStoreApi.create(moduleId, payload);
+        if (id) await localStoreApi.update(moduleId, id, payload);
+        else await localStoreApi.create(moduleId, payload);
       }
 
       navigate(`/modules/${moduleId}`);

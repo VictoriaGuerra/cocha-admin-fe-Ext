@@ -1,136 +1,213 @@
-// Definición de tipos de módulos y sus campos
+// Definición de tipos de módulos y sus campos REALES de la base de datos
 export const MODULE_TYPES = {
   TOURIST_ATTRACTIONS: {
     id: 'attractions',
-    name: 'Atractivos Turísticos',
+    name: 'Atracciones Turísticas',
     icon: 'fa-landmark',
     fields: [
       { name: 'name', type: 'text', required: true, label: 'Nombre' },
       { name: 'description', type: 'textarea', required: true, label: 'Descripción' },
-      { name: 'accessibility', type: 'text', label: 'Accesibilidad' },
-      { name: 'available', type: 'boolean', label: 'Disponible' },
-      { name: 'categories', type: 'select', multiple: true, label: 'Categorías' },
-      { name: 'contact', type: 'object', label: 'Contacto' },
-      { name: 'coverUrl', type: 'image', label: 'Imagen de portada' },
-      { name: 'faq', type: 'array', label: 'Preguntas frecuentes' },
-      { name: 'foods', type: 'array', label: 'Comidas' },
-      { name: 'location', type: 'object', label: 'Ubicación' },
-      { name: 'coords', type: 'map', label: 'Coordenadas' },
-      { name: 'mainCategories', type: 'select', multiple: true, label: 'Categorías principales' },
-      { name: 'order', type: 'number', label: 'Orden' },
-      { name: 'rating', type: 'number', label: 'Calificación' }
+      { name: 'coverUrl', type: 'url', label: 'URL de imagen de portada', required: true },
+      { name: 'available', type: 'checkbox', label: 'Disponible', defaultValue: true },
+      { name: 'isFeatured', type: 'checkbox', label: 'Destacado', defaultValue: false },
+      { name: 'accessibility', type: 'textarea', label: 'Accesibilidad' },
+      { name: 'categories', type: 'array', label: 'Categorías' },
+      { name: 'contact.phone', type: 'text', label: 'Teléfono' },
+      { name: 'contact.mail', type: 'email', label: 'Correo electrónico' },
+      { name: 'contact.link', type: 'url', label: 'Sitio web' },
+      { name: 'faq', type: 'array', label: 'Preguntas frecuentes (FAQ)' },
+      { name: 'foods', type: 'array', label: 'Comidas relacionadas' },
+      { name: 'location.address', type: 'text', label: 'Dirección' },
+      { name: 'location.coords.lat', type: 'text', label: 'Latitud' },
+      { name: 'location.coords.lng', type: 'text', label: 'Longitud' },
+      { name: 'mainCategories', type: 'array', label: 'Categorías principales' },
+      { name: 'order', type: 'number', label: 'Orden de visualización' },
+      { name: 'rating', type: 'number', label: 'Calificación (1-5)', min: 1, max: 5 },
+      { name: 'historyId', type: 'text', label: 'ID de Historia' }
     ]
   },
+  
+  FOODS: {
+    id: 'foods',
+    name: 'Comidas',
+    icon: 'fa-utensils',
+    fields: [
+      { name: 'name', type: 'text', required: true, label: 'Nombre' },
+      { name: 'description', type: 'textarea', required: true, label: 'Descripción' },
+      { name: 'coverUrl', type: 'url', label: 'URL de imagen de portada', required: true },
+      { name: 'available', type: 'checkbox', label: 'Disponible', defaultValue: true },
+      { name: 'ingredients', type: 'array', label: 'Ingredientes' },
+      { name: 'order', type: 'number', label: 'Orden de visualización' },
+      { name: 'rating', type: 'number', label: 'Calificación (1-5)', min: 1, max: 5 }
+    ]
+  },
+
+  ITINERARIES: {
+    id: 'itineraries',
+    name: 'Itinerarios',
+    icon: 'fa-route',
+    fields: [
+      { name: 'title', type: 'text', required: true, label: 'Título' },
+      { name: 'description', type: 'textarea', required: true, label: 'Descripción' },
+      { name: 'coverUrl', type: 'url', label: 'URL de imagen de portada', required: true },
+      { name: 'active', type: 'checkbox', label: 'Activo', defaultValue: true },
+      { name: 'available', type: 'checkbox', label: 'Disponible', defaultValue: true },
+      { name: 'cssClass', type: 'text', label: 'Clase CSS' },
+      { name: 'duration', type: 'text', label: 'Duración' },
+      { name: 'eventList', type: 'array', label: 'Lista de eventos' },
+      { name: 'link', type: 'url', label: 'Enlace' },
+      { name: 'order', type: 'number', label: 'Orden de visualización' },
+      { name: 'slug', type: 'text', label: 'Slug' }
+    ]
+  },
+
+  MAIN_CATEGORIES: {
+    id: 'mainCategories',
+    name: 'Categorías Principales',
+    icon: 'fa-tags',
+    fields: [
+      { name: 'name', type: 'text', required: true, label: 'Nombre' },
+      { name: 'available', type: 'checkbox', label: 'Disponible', defaultValue: true },
+      { name: 'icon', type: 'text', label: 'Icono' },
+      { name: 'isFeatured', type: 'checkbox', label: 'Destacado', defaultValue: false },
+      { name: 'order', type: 'number', label: 'Orden de visualización' },
+      { name: 'photoUrl', type: 'url', label: 'URL de foto' }
+    ]
+  },
+
   RESTAURANTS: {
     id: 'restaurants',
     name: 'Restaurantes',
     icon: 'fa-utensils',
     fields: [
-      { name: 'name', type: 'text', required: true },
-      { name: 'description', type: 'textarea', required: true },
-      { name: 'location', type: 'map', required: true },
-      { name: 'images', type: 'gallery', multiple: true },
-      { name: 'cuisine', type: 'select', required: true },
-      { name: 'priceRange', type: 'select', required: true },
-      { name: 'menu', type: 'file', accept: '.pdf' },
-      { name: 'schedule', type: 'schedule' },
-      { name: 'contact', type: 'contact' }
+      { name: 'name', type: 'text', required: true, label: 'Nombre' },
+      { name: 'description', type: 'textarea', required: true, label: 'Descripción' },
+      { name: 'coverUrl', type: 'url', label: 'URL de imagen de portada', required: true },
+      { name: 'available', type: 'checkbox', label: 'Disponible', defaultValue: true },
+      { name: 'accessibility', type: 'textarea', label: 'Accesibilidad' },
+      { name: 'categories', type: 'array', label: 'Categorías' },
+      { name: 'contact.phone', type: 'text', label: 'Teléfono' },
+      { name: 'contact.mail', type: 'email', label: 'Correo electrónico' },
+      { name: 'contact.link', type: 'url', label: 'Sitio web' },
+      { name: 'customDeliveryUrl', type: 'url', label: 'URL personalizada de delivery' },
+      { name: 'deliveryUrls', type: 'array', label: 'URLs de delivery' },
+      { name: 'faq', type: 'array', label: 'Preguntas frecuentes (FAQ)' },
+      { name: 'foods', type: 'array', label: 'Comidas' },
+      { name: 'isFeatured', type: 'checkbox', label: 'Destacado', defaultValue: false },
+      { name: 'location.address', type: 'text', label: 'Dirección' },
+      { name: 'location.coords.lat', type: 'text', label: 'Latitud' },
+      { name: 'location.coords.lng', type: 'text', label: 'Longitud' },
+      { name: 'mainCategories', type: 'array', label: 'Categorías principales' },
+      { name: 'order', type: 'number', label: 'Orden de visualización' },
+      { name: 'rating', type: 'number', label: 'Calificación (1-5)', min: 1, max: 5 }
     ]
   },
-  FOODS: {
-    id: 'foods',
-    name: 'Comidas',
-    icon: 'fa-hamburger',
-    fields: [
-      { name: 'name', type: 'text', required: true },
-      { name: 'description', type: 'textarea', required: true },
-      { name: 'images', type: 'gallery', multiple: true },
-      { name: 'category', type: 'select', required: true },
-      { name: 'ingredients', type: 'tags', multiple: true },
-      { name: 'price', type: 'number' },
-      { name: 'spiciness', type: 'select' }
-    ]
-  },
+
   EVENTS: {
     id: 'events',
     name: 'Eventos',
-    icon: 'fa-calendar-alt',
+    icon: 'fa-calendar-days',
     fields: [
-      { name: 'name', type: 'text', required: true },
-      { name: 'description', type: 'textarea', required: true },
-      { name: 'location', type: 'map', required: true },
-      { name: 'images', type: 'gallery', multiple: true },
-      { name: 'startDate', type: 'datetime', required: true },
-      { name: 'endDate', type: 'datetime', required: true },
-      { name: 'category', type: 'select', required: true },
-      { name: 'price', type: 'number' },
-      { name: 'contact', type: 'contact' }
+      { name: 'name', type: 'text', required: true, label: 'Nombre del evento' },
+      { name: 'description', type: 'textarea', required: true, label: 'Descripción' },
+      { name: 'coverUrl', type: 'url', required: true, label: 'URL de imagen de portada' },
+      { name: 'available', type: 'checkbox', label: 'Disponible', defaultValue: true },
+      { name: 'active', type: 'checkbox', label: 'Activo', defaultValue: true },
+      { name: 'isFeatured', type: 'checkbox', label: 'Destacado', defaultValue: false },
+      { name: 'categories', type: 'array', label: 'Categorías' },
+      { name: 'mainCategories', type: 'array', label: 'Categorías principales' },
+      { name: 'tags', type: 'array', label: 'Etiquetas' },
+      { name: 'startDate', type: 'date', required: true, label: 'Fecha inicio' },
+      { name: 'endDate', type: 'date', label: 'Fecha fin' },
+      { name: 'startTime', type: 'time', label: 'Hora inicio' },
+      { name: 'endTime', type: 'time', label: 'Hora fin' },
+      { name: 'venueName', type: 'text', label: 'Lugar/Recinto' },
+      { name: 'location.address', type: 'text', label: 'Dirección' },
+      { name: 'location.coords.lat', type: 'text', label: 'Latitud' },
+      { name: 'location.coords.lng', type: 'text', label: 'Longitud' },
+      { name: 'organizer', type: 'text', label: 'Organizador' },
+      { name: 'contact.phone', type: 'text', label: 'Teléfono' },
+      { name: 'contact.mail', type: 'email', label: 'Correo' },
+      { name: 'contact.link', type: 'url', label: 'Sitio web' },
+      { name: 'ticketUrl', type: 'url', label: 'URL de tickets' },
+      { name: 'isFree', type: 'checkbox', label: 'Entrada gratuita', defaultValue: false },
+      { name: 'price', type: 'number', label: 'Precio' },
+      { name: 'currency', type: 'text', label: 'Moneda' },
+      { name: 'capacity', type: 'number', label: 'Capacidad' },
+      { name: 'galleryUrls', type: 'array', label: 'Galería de imágenes (URLs)' },
+      { name: 'faq', type: 'array', label: 'Preguntas frecuentes (FAQ)' },
+      { name: 'order', type: 'number', label: 'Orden de visualización' }
     ]
   },
+
   HOTELS: {
     id: 'hotels',
     name: 'Hoteles',
     icon: 'fa-hotel',
     fields: [
-      { name: 'name', type: 'text', required: true },
-      { name: 'description', type: 'textarea', required: true },
-      { name: 'location', type: 'map', required: true },
-      { name: 'images', type: 'gallery', multiple: true },
-      { name: 'category', type: 'select', required: true },
-      { name: 'amenities', type: 'tags', multiple: true },
-      { name: 'priceRange', type: 'select', required: true },
-      { name: 'contact', type: 'contact' }
+      { name: 'name', type: 'text', required: true, label: 'Nombre' },
+      { name: 'description', type: 'textarea', required: true, label: 'Descripción' },
+      { name: 'coverUrl', type: 'url', required: true, label: 'URL imagen portada' },
+      { name: 'available', type: 'checkbox', label: 'Disponible', defaultValue: true },
+      { name: 'isFeatured', type: 'checkbox', label: 'Destacado', defaultValue: false },
+      { name: 'stars', type: 'number', label: 'Estrellas (1-5)', min: 1, max: 5 },
+      { name: 'rating', type: 'number', label: 'Calificación (1-5)', min: 0, max: 5 },
+      { name: 'categories', type: 'array', label: 'Categorías' },
+      { name: 'mainCategories', type: 'array', label: 'Categorías principales' },
+      { name: 'amenities', type: 'array', label: 'Amenities/Servicios' },
+      { name: 'roomTypes', type: 'array', label: 'Tipos de habitación' },
+      { name: 'priceRangeMin', type: 'number', label: 'Precio mínimo' },
+      { name: 'priceRangeMax', type: 'number', label: 'Precio máximo' },
+      { name: 'currency', type: 'text', label: 'Moneda' },
+      { name: 'checkInTime', type: 'time', label: 'Check-in' },
+      { name: 'checkOutTime', type: 'time', label: 'Check-out' },
+      { name: 'location.address', type: 'text', label: 'Dirección' },
+      { name: 'location.coords.lat', type: 'text', label: 'Latitud' },
+      { name: 'location.coords.lng', type: 'text', label: 'Longitud' },
+      { name: 'contact.phone', type: 'text', label: 'Teléfono' },
+      { name: 'contact.mail', type: 'email', label: 'Correo' },
+      { name: 'contact.link', type: 'url', label: 'Sitio web' },
+      { name: 'galleryUrls', type: 'array', label: 'Galería (URLs)' },
+      { name: 'faq', type: 'array', label: 'FAQ' },
+      { name: 'order', type: 'number', label: 'Orden' }
     ]
   },
-  TOURIST_ROUTES: {
-    id: 'routes',
-    name: 'Rutas Turísticas',
-    icon: 'fa-route',
-    fields: [
-      { name: 'name', type: 'text', required: true },
-      { name: 'description', type: 'textarea', required: true },
-      { name: 'points', type: 'points', multiple: true },
-      { name: 'duration', type: 'duration', required: true },
-      { name: 'difficulty', type: 'select', required: true },
-      { name: 'images', type: 'gallery', multiple: true },
-      { name: 'recommendations', type: 'textarea' }
-    ]
-  },
-  POINTS_OF_INTEREST: {
+
+  POINTS: {
     id: 'points',
     name: 'Puntos de Interés',
-    icon: 'fa-map-marker-alt',
+    icon: 'fa-location-dot',
     fields: [
-      { name: 'name', type: 'text', required: true },
-      { name: 'description', type: 'textarea', required: true },
-      { name: 'location', type: 'map', required: true },
-      { name: 'category', type: 'select', required: true },
-      { name: 'images', type: 'gallery', multiple: true }
+      { name: 'name', type: 'text', required: true, label: 'Nombre' },
+      { name: 'description', type: 'textarea', required: true, label: 'Descripción' },
+      { name: 'coverUrl', type: 'url', required: true, label: 'URL imagen portada' },
+      { name: 'available', type: 'checkbox', label: 'Disponible', defaultValue: true },
+      { name: 'isFeatured', type: 'checkbox', label: 'Destacado', defaultValue: false },
+      { name: 'categories', type: 'array', label: 'Categorías' },
+      { name: 'mainCategories', type: 'array', label: 'Categorías principales' },
+      { name: 'location.address', type: 'text', label: 'Dirección' },
+      { name: 'location.coords.lat', type: 'text', label: 'Latitud' },
+      { name: 'location.coords.lng', type: 'text', label: 'Longitud' },
+      { name: 'contact.phone', type: 'text', label: 'Teléfono' },
+      { name: 'contact.mail', type: 'email', label: 'Correo' },
+      { name: 'contact.link', type: 'url', label: 'Sitio web' },
+      { name: 'order', type: 'number', label: 'Orden' }
     ]
   },
+
   ANNOUNCEMENTS: {
     id: 'announcements',
     name: 'Anuncios',
     icon: 'fa-bullhorn',
     fields: [
-      { name: 'title', type: 'text', required: true },
-      { name: 'content', type: 'richtext', required: true },
-      { name: 'image', type: 'image' },
-      { name: 'startDate', type: 'date', required: true },
-      { name: 'endDate', type: 'date', required: true },
-      { name: 'target', type: 'select', required: true }
-    ]
-  },
-  CATEGORIES: {
-    id: 'categories',
-    name: 'Categorías',
-    icon: 'fa-tags',
-    fields: [
-      { name: 'name', type: 'text', required: true },
-      { name: 'description', type: 'textarea' },
-      { name: 'parent', type: 'select' },
-      { name: 'icon', type: 'icon' },
-      { name: 'moduleType', type: 'select', required: true }
+      { name: 'title', type: 'text', required: true, label: 'Título' },
+      { name: 'description', type: 'textarea', required: true, label: 'Descripción' },
+      { name: 'coverUrl', type: 'url', label: 'Imagen (URL)' },
+      { name: 'startDate', type: 'date', label: 'Inicio' },
+      { name: 'endDate', type: 'date', label: 'Fin' },
+      { name: 'active', type: 'checkbox', label: 'Activo', defaultValue: true },
+      { name: 'isFeatured', type: 'checkbox', label: 'Destacado', defaultValue: false },
+      { name: 'order', type: 'number', label: 'Orden' }
     ]
   }
 };

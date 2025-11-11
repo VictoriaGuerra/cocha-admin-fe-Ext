@@ -2,11 +2,14 @@
 
 
 const STORAGE_KEY = 'vc_users_v1'
+const RESET_KEY = 'vc_password_resets'
 
 
 // usuarios por defecto
 const defaultUsers = [
-{ id: 'u-1', email: 'super@visita.cocha', name: 'Super Admin', roles: ['SuperAdmin'], password: 'admin123' }
+	{ id: 'u-1', email: 'layef61997@wacold.com', firstName: 'Super', lastName: 'Admin', name: 'Super Admin', roles: ['SuperAdmin'], password: 'Admin123', mustChangePassword: true },
+	{ id: 'u-2', email: 'admin@visita.cocha', firstName: 'Admin', lastName: 'General', name: 'Admin General', roles: ['Admin'], password: 'Admin123' },
+	{ id: 'u-3', email: 'mantenedor@visita.cocha', firstName: 'User', lastName: 'Mantenedor', name: 'Mantenedor', roles: ['Mantenedor'], password: 'Admin123' },
 ]
 
 const MODULES_KEY = 'vc_modules_v1'
@@ -63,16 +66,19 @@ return users.map(({ password, ...rest }) => rest)
 }
 
 
-export const createUser = async ({ email, name, roles }) => {
-const users = read()
-if (users.find(u => u.email === email)) throw { message: 'Usuario ya existe' }
-const password = Math.random().toString(36).slice(-8) // temp pass
-const newUser = { id: `u-${Date.now()}`, email, name, roles, password }
-users.push(newUser)
-write(users)
-// simulamos envío de email
-simulateSendEmail(email, `Tu cuenta ha sido creada. Usuario: ${email} — Contraseña temporal: ${password}`)
-return { id: newUser.id, email, name, roles }
+export const createUser = async ({ email, name, roles, firstName, lastName }) => {
+	const users = read()
+	if (users.find(u => u.email === email)) throw { message: 'Usuario ya existe' }
+	// Nuevo flujo: generar contraseña temporal fuerte y exigir cambio en el primer ingreso
+	const fullName = name || `${firstName || ''} ${lastName || ''}`.trim()
+	const tempPass = generateTempPassword()
+	const newUser = { id: `u-${Date.now()}`, email, firstName, lastName, name: fullName, roles, password: tempPass, mustChangePassword: true }
+	users.push(newUser)
+	write(users)
+	// Enviar usuario y contraseña temporal por correo (simulado)
+	const loginHint = `Usuario: ${email}\nContraseña temporal: ${tempPass}\n\nAl ingresar por primera vez, se te pedirá actualizarla.`
+	simulateSendEmail(email, `Tu cuenta ha sido creada para ${fullName}.\n${loginHint}`)
+	return { id: newUser.id, email, name: fullName, roles, tempPassword: tempPass }
 }
 
 
@@ -94,6 +100,82 @@ write(users)
 return { ok: true }
 }
 
+// Password reset storage helpers
+function readResets(){
+	const raw = localStorage.getItem(RESET_KEY)
+	return raw ? JSON.parse(raw) : []
+}
+function writeResets(list){
+	localStorage.setItem(RESET_KEY, JSON.stringify(list))
+}
+
+// Request a password reset code (also used for invites)
+export const requestPasswordReset = async (email, { reason = 'forgot' } = {}) => {
+	const users = read()
+	const u = users.find(x => x.email === email)
+	if (!u) throw { message: 'No existe un usuario con ese correo' }
+	const code = String(Math.floor(100000 + Math.random() * 900000)) // 6 dígitos
+	const expiresAt = Date.now() + 1000 * 60 * 10 // 10 minutos
+	let list = readResets()
+	list = list.filter(x => x.email !== email) // invalidar previos
+	list.push({ email, code, expiresAt })
+	writeResets(list)
+	const purpose = reason === 'invite' ? 'activar tu cuenta y crear tu contraseña' : 'restablecer tu contraseña'
+	const link = `/reset?email=${encodeURIComponent(email)}&code=${code}`
+	simulateSendEmail(email, `Código de verificación: ${code}. Tienes 10 minutos para ${purpose}.\nPuedes abrir directamente: ${link}`)
+	return { ok: true }
+}
+
+export const verifyResetCode = async (email, code) => {
+	const item = readResets().find(x => x.email === email && x.code === code)
+	if (!item) throw { message: 'Código inválido' }
+	if (Date.now() > item.expiresAt) throw { message: 'Código expirado' }
+	return { ok: true }
+}
+
+export const resetPassword = async (email, code, newPassword) => {
+	await verifyResetCode(email, code)
+	const users = read()
+	const idx = users.findIndex(x => x.email === email)
+	if (idx === -1) throw { message: 'Usuario no encontrado' }
+	if (!isStrongPassword(newPassword)) throw { message: 'La contraseña no cumple los requisitos' }
+	users[idx] = { ...users[idx], password: newPassword, mustChangePassword: false }
+	write(users)
+	// clear code
+	writeResets(readResets().filter(x => x.email !== email))
+	simulateSendEmail(email, 'Tu contraseña ha sido actualizada correctamente.')
+	return { ok: true }
+}
+
+// Validación básica de contraseñas: 8+ caracteres, mayúscula, minúscula, número
+function isStrongPassword(p){
+	if (!p || p.length < 8) return false
+	if (!/[a-z]/.test(p)) return false
+	if (!/[A-Z]/.test(p)) return false
+	if (!/[0-9]/.test(p)) return false
+	return true
+}
+
+// Genera una contraseña temporal que cumpla la política básica
+function generateTempPassword(){
+	// Formato: Temp + 6 dígitos + A (ej: Temp482931A)
+	const num = String(Math.floor(100000 + Math.random() * 900000))
+	return `Temp${num}A`
+}
+
+// Completar cambio de contraseña en primer inicio de sesión (sin código)
+export const completeInitialPasswordSetup = async (email, newPassword) => {
+	const users = read()
+	const idx = users.findIndex(x => x.email === email)
+	if (idx === -1) throw { message: 'Usuario no encontrado' }
+	if (!isStrongPassword(newPassword)) throw { message: 'La contraseña no cumple los requisitos' }
+	users[idx] = { ...users[idx], password: newPassword, mustChangePassword: false }
+	write(users)
+	simulateSendEmail(email, 'Tu contraseña inicial ha sido establecida con éxito.')
+	const { password, ...rest } = users[idx]
+	return rest
+}
+
 // Modules CRUD (localStorage)
 export const getModules = async () => {
 	const mods = readModules()
@@ -106,8 +188,8 @@ export const createModule = async ({ name, status = 'Activo' }) => {
 	const newMod = { id: `m-${Date.now()}`, name, status, allowedRoles: ['Admin','Mantenedor'] }
 	mods.push(newMod)
 	writeModules(mods)
-	// notify admin (simulado)
-	try{ simulateSendEmail('super@visita.cocha', `Nuevo módulo creado: ${name}`) }catch(e){/* ignore */}
+		// notify admin (simulado)
+		try{ simulateSendEmail('layef61997@wacold.com', `Nuevo módulo creado: ${name}`) }catch(e){/* ignore */}
 	return newMod
 }
 
@@ -142,3 +224,9 @@ function simulateSendEmail(to, body) {
 	console.info('Simulated email to', to, '', body)
 	saveSimulatedEmail(to, body)
 }
+
+// Demo helpers to inspect simulated emails
+export const getSentEmails = () => {
+  try { return JSON.parse(localStorage.getItem('vc_sent_emails') || '[]').sort((a,b)=> b.date.localeCompare(a.date)) } catch { return [] }
+}
+export const clearSentEmails = () => { localStorage.removeItem('vc_sent_emails'); return { ok: true } }

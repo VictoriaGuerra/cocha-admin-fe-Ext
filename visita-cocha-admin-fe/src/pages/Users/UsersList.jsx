@@ -1,6 +1,6 @@
 // src/pages/Users/UsersList.jsx
 import React, { useEffect, useState } from 'react'
-import * as mockApi from '../../api/mockApi'
+import * as api from '../../api'
 import UserForm from './UserForm'
 
 
@@ -12,7 +12,7 @@ export default function UsersList(){
 
 	const load = async ()=>{
 		setLoading(true)
-		const data = await mockApi.getUsers()
+		const data = await api.getUsers()
 		setUsers(data)
 		setLoading(false)
 	}
@@ -24,7 +24,7 @@ export default function UsersList(){
 
 	const handleDelete = async (id)=>{
 		if (!confirm('Eliminar usuario?')) return
-		await mockApi.deleteUser(id)
+		await api.deleteUser(id)
 		await load()
 	}
 
