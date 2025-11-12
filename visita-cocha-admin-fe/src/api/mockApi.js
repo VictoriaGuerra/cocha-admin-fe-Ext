@@ -10,6 +10,8 @@ const defaultUsers = [
 	{ id: 'u-1', email: 'layef61997@wacold.com', firstName: 'Super', lastName: 'Admin', name: 'Super Admin', roles: ['SuperAdmin'], password: 'Admin123', mustChangePassword: true },
 	{ id: 'u-2', email: 'admin@visita.cocha', firstName: 'Admin', lastName: 'General', name: 'Admin General', roles: ['Admin'], password: 'Admin123' },
 	{ id: 'u-3', email: 'mantenedor@visita.cocha', firstName: 'User', lastName: 'Mantenedor', name: 'Mantenedor', roles: ['Mantenedor'], password: 'Admin123' },
+	// Usuario pedido por el cliente para pruebas
+	{ id: 'u-4', email: 'super@visita.cocha', firstName: 'Super', lastName: 'Cocha', name: 'Super Cocha', roles: ['SuperAdmin'], password: 'admin123' },
 ]
 
 const MODULES_KEY = 'vc_modules_v1'
