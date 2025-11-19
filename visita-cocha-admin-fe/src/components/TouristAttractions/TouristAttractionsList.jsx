@@ -14,13 +14,17 @@ const TouristAttractionsList = () => {
   const canEdit = ['superadmin', 'admin'].includes(user?.role);
   const canDelete = user?.role === 'superadmin';
 
+  // Cargar los atractivos al montar el componente
   useEffect(() => {
     loadAttractions();
   }, []);
 
+  // Función para cargar atractivos
   const loadAttractions = async () => {
+    setLoading(true);
     try {
       const data = await fetchTouristAttractions();
+      console.log('Datos recibidos:', data); // para depurar
       setAttractions(data);
     } catch (err) {
       setError('Error al cargar los atractivos turísticos');
@@ -30,6 +34,7 @@ const TouristAttractionsList = () => {
     }
   };
 
+  // Funciones de acción
   const handleEdit = (id) => {
     navigate(id ? `/attractions/${id}/edit` : '/attractions/new');
   };
@@ -50,8 +55,9 @@ const TouristAttractionsList = () => {
     navigate(`/attractions/${id}`);
   };
 
+  // Columnas para BaseList
   const columns = [
-    { key: 'id', label: 'ID' },
+    { key: '_id', label: 'ID' },
     { key: 'name', label: 'Nombre' },
     { key: 'city', label: 'Ciudad' },
     { key: 'category', label: 'Categoría' },
@@ -77,9 +83,9 @@ const TouristAttractionsList = () => {
       title="Atractivos Turísticos"
       items={attractions}
       columns={columns}
-      onEdit={handleEdit}
-      onDelete={handleDelete}
-      onView={handleView}
+      onEdit={(item) => handleEdit(item._id)}
+      onDelete={(item) => handleDelete(item._id)}
+      onView={(item) => handleView(item._id)}
       canEdit={canEdit}
       canDelete={canDelete}
     />

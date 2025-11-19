@@ -1,14 +1,14 @@
 // Mapea los ids de módulo del frontend a las rutas reales del backend
 // Ajusta aquí si tus endpoints cambian o si agregas más módulos
 export const BACKEND_ENDPOINTS = {
-  attractions: '/attractions',
-  restaurants: '/restaurants',
-  events: '/events',
-  hotels: '/hotels',
-  foods: '/foods',
-  itineraries: '/itineraries',
-  points: '/points',
-  announcements: '/announcements'
+  attractions: '/atractivos',
+  restaurants: '/restaurantes',
+  events: '/eventos',
+  hotels: '/hoteles',
+  foods: '/comidas',
+  itineraries: '/itinerarios',
+  points: '/puntos',
+  announcements: '/anuncios'
 }
 
 // Capacidades por módulo (puedes ajustar según lo que tu backend soporte hoy)

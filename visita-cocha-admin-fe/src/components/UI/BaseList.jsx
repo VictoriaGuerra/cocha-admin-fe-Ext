@@ -68,42 +68,43 @@ const BaseList = ({
               </tr>
             </thead>
             <tbody>
-              {paginatedItems.map(item => (
-                <tr key={item.id}>
-                  {columns.map(col => (
-                    <td key={`${item.id}-${col.key}`}>
-                      {col.render ? col.render(item[col.key]) : item[col.key]}
-                    </td>
-                  ))}
-                  <td>
-                    <div className="flex gap-2">
-                      <button
-                        className="btn btn-secondary btn-sm"
-                        onClick={() => onView(item.id)}
-                      >
-                        <i className="fas fa-eye"></i>
-                      </button>
-                      {canEdit && (
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => onEdit(item.id)}
-                        >
-                          <i className="fas fa-edit"></i>
-                        </button>
-                      )}
-                      {canDelete && (
-                        <button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => onDelete(item.id)}
-                        >
-                          <i className="fas fa-trash"></i>
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+  {paginatedItems.map(item => (
+    <tr key={item._id || item.id}>
+      {columns.map(col => (
+        <td key={`${item._id || item.id}-${col.key}`}>
+          {col.render ? col.render(item[col.key]) : item[col.key]}
+        </td>
+      ))}
+      <td>
+        <div className="flex gap-2">
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => onView(item._id || item.id)}
+          >
+            <i className="fas fa-eye"></i>
+          </button>
+          {canEdit && (
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => onEdit(item._id || item.id)}
+            >
+              <i className="fas fa-edit"></i>
+            </button>
+          )}
+          {canDelete && (
+            <button
+              className="btn btn-danger btn-sm"
+              onClick={() => onDelete(item._id || item.id)}
+            >
+              <i className="fas fa-trash"></i>
+            </button>
+          )}
+        </div>
+      </td>
+    </tr>
+  ))}
+</tbody>
+
           </table>
         </div>
 

@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import BaseForm from '../../components/UI/BaseForm';
 import { MODULE_TYPES } from '../../config/moduleTypes';
-import { localStoreApi } from '../../api/localStoreApi';
-import { USE_BACKEND, getContentById, createContent, updateContent } from '../../api';
+import { getContentById, createContent, updateContent } from '../../api';
 
 export default function ModuleGenericForm() {
   const { moduleId, id } = useParams();
@@ -29,11 +28,14 @@ export default function ModuleGenericForm() {
     const load = async () => {
       if (id) {
         try {
-          const item = USE_BACKEND ? await getContentById(moduleId, id) : await localStoreApi.getById(moduleId, id);
+          setLoading(true);
+          const item = await getContentById(moduleId, id);
           if (mounted && item) setValues(item);
         } catch (err) {
-          console.error(err);
+          console.error('Error cargando item para edición:', err);
           setError('Error al cargar datos');
+        } finally {
+          setLoading(false);
         }
       } else {
         // Valores por defecto si es nuevo
@@ -106,13 +108,8 @@ export default function ModuleGenericForm() {
         },
       };
 
-      if (USE_BACKEND) {
-        if (id) await updateContent(moduleId, id, payload)
-        else await createContent(moduleId, payload)
-      } else {
-        if (id) await localStoreApi.update(moduleId, id, payload);
-        else await localStoreApi.create(moduleId, payload);
-      }
+      if (id) await updateContent(moduleId, id, payload);
+      else await createContent(moduleId, payload);
 
       navigate(`/modules/${moduleId}`);
     } catch (e) {
