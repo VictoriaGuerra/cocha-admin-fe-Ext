@@ -1,24 +1,36 @@
 {
-  "dependencies": {
-    "react-router-dom": "^7.9.5"
-  },
   "name": "cocha-admin-fe-ext",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "devDependencies": {},
+  "private": true,
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "react-router build",
+    "dev": "react-router dev",
+    "start": "react-router-serve ./build/server/index.js",
+    "start:server": "node server/index.js",
+    "typecheck": "react-router typegen && tsc"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/VictoriaGuerra/cocha-admin-fe-Ext.git"
+  "dependencies": {
+    "@react-router/node": "^7.9.2",
+    "@react-router/serve": "^7.9.2",
+    "firebase": "^9.22.2",
+    "isbot": "^5.1.31",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-router": "^7.9.2",
+    "recharts": "^2.15.4",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "@google-analytics/data": "^3.0.0"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/VictoriaGuerra/cocha-admin-fe-Ext/issues"
-  },
-  "homepage": "https://github.com/VictoriaGuerra/cocha-admin-fe-Ext#readme"
+  "devDependencies": {
+    "@react-router/dev": "^7.9.2",
+    "@tailwindcss/vite": "^4.1.13",
+    "@types/node": "^22",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.7",
+    "vite-tsconfig-paths": "^5.1.4"
+  }
 }
